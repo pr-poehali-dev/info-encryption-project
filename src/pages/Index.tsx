@@ -100,6 +100,49 @@ const Index = () => {
     return text.split('').reverse().join('');
   };
 
+  const morseCipher = (text: string, encrypt: boolean = true) => {
+    const morseCode: { [key: string]: string } = {
+      'А': '.-', 'Б': '-...', 'В': '.--', 'Г': '--.', 'Д': '-..',
+      'Е': '.', 'Ё': '.', 'Ж': '...-', 'З': '--..', 'И': '..',
+      'Й': '.---', 'К': '-.-', 'Л': '.-..', 'М': '--', 'Н': '-.',
+      'О': '---', 'П': '.--.', 'Р': '.-.', 'С': '...', 'Т': '-',
+      'У': '..-', 'Ф': '..-.', 'Х': '....', 'Ц': '-.-.', 'Ч': '---.',
+      'Ш': '----', 'Щ': '--.-', 'Ъ': '--.--', 'Ы': '-.--', 'Ь': '-..-',
+      'Э': '..-..', 'Ю': '..--', 'Я': '.-.-',
+      'A': '.-', 'B': '-...', 'C': '-.-.', 'D': '-..', 'E': '.',
+      'F': '..-.', 'G': '--.', 'H': '....', 'I': '..', 'J': '.---',
+      'K': '-.-', 'L': '.-..', 'M': '--', 'N': '-.', 'O': '---',
+      'P': '.--.', 'Q': '--.-', 'R': '.-.', 'S': '...', 'T': '-',
+      'U': '..-', 'V': '...-', 'W': '.--', 'X': '-..-', 'Y': '-.--',
+      'Z': '--..', '0': '-----', '1': '.----', '2': '..---',
+      '3': '...--', '4': '....-', '5': '.....', '6': '-....',
+      '7': '--...', '8': '---..', '9': '----.',
+      '.': '.-.-.-', ',': '--..--', '?': '..--..', '!': '-.-.--',
+      ' ': '/'
+    };
+
+    if (encrypt) {
+      return text
+        .toUpperCase()
+        .split('')
+        .map(char => morseCode[char] || char)
+        .join(' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+    } else {
+      const reverseMorse: { [key: string]: string } = {};
+      Object.keys(morseCode).forEach(key => {
+        reverseMorse[morseCode[key]] = key;
+      });
+
+      return text
+        .split(' ')
+        .map(code => reverseMorse[code] || code)
+        .join('')
+        .replace(/\//g, ' ');
+    }
+  };
+
   const handleEncrypt = () => {
     switch (algorithm) {
       case 'caesar':
@@ -116,6 +159,9 @@ const Index = () => {
         break;
       case 'reverse':
         setEncryptedText(reverseCipher(inputText));
+        break;
+      case 'morse':
+        setEncryptedText(morseCipher(inputText, true));
         break;
     }
   };
@@ -136,6 +182,9 @@ const Index = () => {
         break;
       case 'reverse':
         setEncryptedText(reverseCipher(inputText));
+        break;
+      case 'morse':
+        setEncryptedText(morseCipher(inputText, false));
         break;
     }
   };
@@ -438,6 +487,7 @@ const Index = () => {
                           <SelectItem value="vigenere">🔑 Шифр Виженера</SelectItem>
                           <SelectItem value="atbash">🔃 Атбаш</SelectItem>
                           <SelectItem value="rot13">⚡ ROT13</SelectItem>
+                          <SelectItem value="morse">📡 Азбука Морзе</SelectItem>
                           <SelectItem value="reverse">↩️ Реверс</SelectItem>
                         </SelectContent>
                       </Select>
@@ -472,13 +522,14 @@ const Index = () => {
                       </div>
                     )}
 
-                    {(algorithm === 'atbash' || algorithm === 'rot13' || algorithm === 'reverse') && (
+                    {(algorithm === 'atbash' || algorithm === 'rot13' || algorithm === 'reverse' || algorithm === 'morse') && (
                       <div className="p-4 bg-primary/10 border border-primary/30 rounded-lg">
                         <p className="text-sm text-muted-foreground flex items-center gap-2">
                           <Icon name="Info" className="w-4 h-4 text-primary" />
                           {algorithm === 'atbash' && 'Атбаш заменяет буквы зеркально: А↔Я, Б↔Ю и т.д.'}
                           {algorithm === 'rot13' && 'ROT13 — частный случай шифра Цезаря со сдвигом 13'}
                           {algorithm === 'reverse' && 'Реверс переворачивает текст задом наперёд'}
+                          {algorithm === 'morse' && 'Азбука Морзе: точки (.) и тире (-). Пробелы между символами, "/" разделяет слова'}
                         </p>
                       </div>
                     )}
@@ -533,6 +584,7 @@ const Index = () => {
                             {algorithm === 'vigenere' && 'Шифр Виженера'}
                             {algorithm === 'atbash' && 'Атбаш'}
                             {algorithm === 'rot13' && 'ROT13'}
+                            {algorithm === 'morse' && 'Азбука Морзе'}
                             {algorithm === 'reverse' && 'Реверс'}
                           </strong>
                           {algorithm === 'caesar' && <> со сдвигом <strong className="text-primary">{shift}</strong></>}
