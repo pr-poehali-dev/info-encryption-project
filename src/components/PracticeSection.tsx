@@ -14,16 +14,19 @@ const PracticeSection = () => {
   const [encryptedText, setEncryptedText] = useState('');
   const [algorithm, setAlgorithm] = useState<CipherAlgorithm>('caesar');
   const [keyword, setKeyword] = useState('КЛЮЧ');
+  const [rails, setRails] = useState(3);
+  const [affineA, setAffineA] = useState(5);
+  const [affineB, setAffineB] = useState(8);
 
   const handleEncrypt = useCallback(() => {
-    const result = processCipher(algorithm, inputText, true, { shift, keyword });
+    const result = processCipher(algorithm, inputText, true, { shift, keyword, rails, a: affineA, b: affineB });
     setEncryptedText(result);
-  }, [algorithm, inputText, shift, keyword]);
+  }, [algorithm, inputText, shift, keyword, rails, affineA, affineB]);
 
   const handleDecrypt = useCallback(() => {
-    const result = processCipher(algorithm, inputText, false, { shift, keyword });
+    const result = processCipher(algorithm, inputText, false, { shift, keyword, rails, a: affineA, b: affineB });
     setEncryptedText(result);
-  }, [algorithm, inputText, shift, keyword]);
+  }, [algorithm, inputText, shift, keyword, rails, affineA, affineB]);
 
   const algorithmInfo = useMemo(() => {
     const info: Record<CipherAlgorithm, string> = {
@@ -32,14 +35,26 @@ const PracticeSection = () => {
       atbash: 'Атбаш заменяет буквы зеркально: А↔Я, Б↔Ю и т.д.',
       rot13: 'ROT13 — частный случай шифра Цезаря со сдвигом 13',
       morse: 'Азбука Морзе: точки (.) и тире (-). Пробелы между символами, "/" разделяет слова',
-      reverse: 'Реверс переворачивает текст задом наперёд'
+      reverse: 'Реверс переворачивает текст задом наперёд',
+      railfence: `Шифр железнодорожной изгороди с ${rails} рельсами`,
+      substitution: 'Шифр простой замены — каждая буква заменяется другой по ключу',
+      playfair: `Шифр Плейфера с матрицей 5×5 на основе ключа "${keyword}"`,
+      baconian: 'Шифр Бэкона — кодирование букв через A и B (5 символов на букву)',
+      polybius: 'Квадрат Полибия — координаты букв в таблице 5×5',
+      bifid: `Бифидный шифр с ключом "${keyword}" — двумерная подстановка`,
+      xor: `XOR шифрование с ключом "${keyword}" — побитовая операция`,
+      base64: 'Base64 — кодирование бинарных данных в текст',
+      affine: `Аффинный шифр: (${affineA}x + ${affineB}) mod 26`,
+      beaufort: `Шифр Бофорта с ключом "${keyword}" — вариант Виженера`
     };
     return info[algorithm];
-  }, [algorithm, shift, keyword]);
+  }, [algorithm, shift, keyword, rails, affineA, affineB]);
 
   const showShiftControl = algorithm === 'caesar';
-  const showKeywordControl = algorithm === 'vigenere';
-  const showInfo = ['atbash', 'rot13', 'reverse', 'morse'].includes(algorithm);
+  const showKeywordControl = ['vigenere', 'playfair', 'bifid', 'xor', 'beaufort', 'substitution'].includes(algorithm);
+  const showRailsControl = algorithm === 'railfence';
+  const showAffineControl = algorithm === 'affine';
+  const showInfo = ['atbash', 'rot13', 'reverse', 'morse', 'baconian', 'polybius', 'base64'].includes(algorithm);
 
   return (
     <Card className="cyber-border bg-card/50 backdrop-blur-sm pulse-glow">
@@ -58,13 +73,23 @@ const PracticeSection = () => {
               <SelectTrigger id="algorithm" className="cyber-border bg-muted/50">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="bg-card border-primary/20">
+              <SelectContent className="bg-card border-primary/20 max-h-[400px] overflow-y-auto">
                 <SelectItem value="caesar">🔄 Шифр Цезаря</SelectItem>
                 <SelectItem value="vigenere">🔑 Шифр Виженера</SelectItem>
                 <SelectItem value="atbash">🔃 Атбаш</SelectItem>
                 <SelectItem value="rot13">⚡ ROT13</SelectItem>
                 <SelectItem value="morse">📡 Азбука Морзе</SelectItem>
                 <SelectItem value="reverse">↩️ Реверс</SelectItem>
+                <SelectItem value="railfence">🚂 Железнодорожная изгородь</SelectItem>
+                <SelectItem value="substitution">🔀 Простая замена</SelectItem>
+                <SelectItem value="playfair">🎯 Плейфер</SelectItem>
+                <SelectItem value="baconian">🥓 Бэкон</SelectItem>
+                <SelectItem value="polybius">📐 Квадрат Полибия</SelectItem>
+                <SelectItem value="bifid">🔲 Бифидный</SelectItem>
+                <SelectItem value="xor">⚡ XOR</SelectItem>
+                <SelectItem value="base64">📦 Base64</SelectItem>
+                <SelectItem value="affine">📊 Аффинный</SelectItem>
+                <SelectItem value="beaufort">⛵ Бофорт</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -95,6 +120,50 @@ const PracticeSection = () => {
                 className="cyber-border bg-muted/50 font-mono"
               />
               <p className="text-xs text-muted-foreground">Используются только буквы, остальное игнорируется</p>
+            </div>
+          )}
+
+          {showRailsControl && (
+            <div className="space-y-2">
+              <Label htmlFor="rails" className="text-primary">Количество рельс: {rails}</Label>
+              <Input
+                id="rails"
+                type="range"
+                min="2"
+                max="10"
+                value={rails}
+                onChange={(e) => setRails(Number(e.target.value))}
+                className="cursor-pointer"
+              />
+            </div>
+          )}
+
+          {showAffineControl && (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="affineA" className="text-primary">Параметр A (должен быть взаимно простым с 26): {affineA}</Label>
+                <Input
+                  id="affineA"
+                  type="range"
+                  min="1"
+                  max="25"
+                  value={affineA}
+                  onChange={(e) => setAffineA(Number(e.target.value))}
+                  className="cursor-pointer"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="affineB" className="text-primary">Параметр B: {affineB}</Label>
+                <Input
+                  id="affineB"
+                  type="range"
+                  min="0"
+                  max="25"
+                  value={affineB}
+                  onChange={(e) => setAffineB(Number(e.target.value))}
+                  className="cursor-pointer"
+                />
+              </div>
             </div>
           )}
 
