@@ -224,9 +224,14 @@ const Index = () => {
         <footer className="border-t border-primary/20 backdrop-blur-sm bg-background/50 mt-12">
           <div className="container mx-auto px-4 py-6">
             <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-              <p className="text-sm text-muted-foreground">
-                © 2024 CRYPTO.EDU — Образовательный проект по криптографии
-              </p>
+              <div className="flex flex-col gap-1">
+                <p className="text-sm text-muted-foreground">
+                  © 2024 CRYPTO.EDU — Образовательный проект по криптографии
+                </p>
+                <p className="text-sm text-foreground/80">
+                  Создатель: <span className="font-semibold text-primary">Тулинов Владимир Андреевич</span>
+                </p>
+              </div>
               <div className="flex items-center gap-4">
                 <Badge variant="outline" className="border-primary text-primary">
                   <Icon name="Code2" className="w-3 h-3 mr-1" />
