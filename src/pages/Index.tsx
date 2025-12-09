@@ -28,7 +28,7 @@ const Index = () => {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <Icon name="Lock" className="w-8 h-8 text-primary matrix-text" />
-                <h1 className="text-3xl font-bold matrix-text">CRYPTO.EDU</h1>
+                <h1 className="text-3xl font-bold matrix-text">SHIFRPROJ.EDUC</h1>
               </div>
               <Badge variant="outline" className="border-primary text-primary">
                 v1.0.0
@@ -67,7 +67,7 @@ const Index = () => {
                 <CardHeader>
                   <CardTitle className="text-4xl matrix-text flex items-center gap-3">
                     <Icon name="Shield" className="w-10 h-10" />
-                    Шифрование информации
+                    SHIFRPROJ.EDUC
                   </CardTitle>
                   <CardDescription className="text-lg text-muted-foreground">
                     Изучайте криптографию через интерактивные инструменты
@@ -226,7 +226,7 @@ const Index = () => {
             <div className="flex flex-col md:flex-row items-center justify-between gap-4">
               <div className="flex flex-col gap-1">
                 <p className="text-sm text-muted-foreground">
-                  © 2024 CRYPTO.EDU — Образовательный проект по криптографии
+                  © 2024 SHIFRPROJ.EDUC — Образовательный проект по криптографии
                 </p>
                 <p className="text-sm text-foreground/80">
                   Создатель: <span className="font-semibold text-primary">Тулинов Владимир Андреевич</span>
