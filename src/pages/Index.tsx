@@ -14,6 +14,7 @@ const Index = () => {
   const [shift, setShift] = useState(3);
   const [encryptedText, setEncryptedText] = useState('');
   const [algorithm, setAlgorithm] = useState('caesar');
+  const [keyword, setKeyword] = useState('КЛЮЧ');
 
   const caesarCipher = (text: string, shift: number, encrypt: boolean = true) => {
     const s = encrypt ? shift : -shift;
@@ -39,15 +40,103 @@ const Index = () => {
       .join('');
   };
 
+  const vigenereCipher = (text: string, keyword: string, encrypt: boolean = true) => {
+    if (!keyword) return text;
+    const key = keyword.toUpperCase().replace(/[^A-ZА-ЯЁ]/g, '');
+    if (!key) return text;
+    
+    let keyIndex = 0;
+    return text
+      .split('')
+      .map(char => {
+        if (char.match(/[а-яё]/i)) {
+          const keyChar = key[keyIndex % key.length];
+          const keyShift = keyChar.match(/[А-ЯЁ]/) 
+            ? keyChar.charCodeAt(0) - 1040 
+            : keyChar.charCodeAt(0) - 65;
+          keyIndex++;
+          return caesarCipher(char, encrypt ? keyShift : -keyShift, true);
+        } else if (char.match(/[a-z]/i)) {
+          const keyChar = key[keyIndex % key.length];
+          const keyShift = keyChar.match(/[А-ЯЁ]/) 
+            ? keyChar.charCodeAt(0) - 1040 
+            : keyChar.charCodeAt(0) - 65;
+          keyIndex++;
+          return caesarCipher(char, encrypt ? keyShift : -keyShift, true);
+        }
+        return char;
+      })
+      .join('');
+  };
+
+  const atbashCipher = (text: string) => {
+    return text
+      .split('')
+      .map(char => {
+        if (char.match(/[а-яё]/i)) {
+          const code = char.charCodeAt(0);
+          const isUpperCase = char === char.toUpperCase();
+          const base = isUpperCase ? 1040 : 1072;
+          const alphabetSize = 32;
+          const newCode = base + (alphabetSize - 1 - (code - base));
+          return String.fromCharCode(newCode);
+        } else if (char.match(/[a-z]/i)) {
+          const code = char.charCodeAt(0);
+          const isUpperCase = char === char.toUpperCase();
+          const base = isUpperCase ? 65 : 97;
+          const newCode = base + (25 - (code - base));
+          return String.fromCharCode(newCode);
+        }
+        return char;
+      })
+      .join('');
+  };
+
+  const rot13Cipher = (text: string) => {
+    return caesarCipher(text, 13, true);
+  };
+
+  const reverseCipher = (text: string) => {
+    return text.split('').reverse().join('');
+  };
+
   const handleEncrypt = () => {
-    if (algorithm === 'caesar') {
-      setEncryptedText(caesarCipher(inputText, shift, true));
+    switch (algorithm) {
+      case 'caesar':
+        setEncryptedText(caesarCipher(inputText, shift, true));
+        break;
+      case 'vigenere':
+        setEncryptedText(vigenereCipher(inputText, keyword, true));
+        break;
+      case 'atbash':
+        setEncryptedText(atbashCipher(inputText));
+        break;
+      case 'rot13':
+        setEncryptedText(rot13Cipher(inputText));
+        break;
+      case 'reverse':
+        setEncryptedText(reverseCipher(inputText));
+        break;
     }
   };
 
   const handleDecrypt = () => {
-    if (algorithm === 'caesar') {
-      setEncryptedText(caesarCipher(inputText, shift, false));
+    switch (algorithm) {
+      case 'caesar':
+        setEncryptedText(caesarCipher(inputText, shift, false));
+        break;
+      case 'vigenere':
+        setEncryptedText(vigenereCipher(inputText, keyword, false));
+        break;
+      case 'atbash':
+        setEncryptedText(atbashCipher(inputText));
+        break;
+      case 'rot13':
+        setEncryptedText(rot13Cipher(inputText));
+        break;
+      case 'reverse':
+        setEncryptedText(reverseCipher(inputText));
+        break;
     }
   };
 
@@ -345,23 +434,54 @@ const Index = () => {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent className="bg-card border-primary/20">
-                          <SelectItem value="caesar">Шифр Цезаря</SelectItem>
+                          <SelectItem value="caesar">🔄 Шифр Цезаря</SelectItem>
+                          <SelectItem value="vigenere">🔑 Шифр Виженера</SelectItem>
+                          <SelectItem value="atbash">🔃 Атбаш</SelectItem>
+                          <SelectItem value="rot13">⚡ ROT13</SelectItem>
+                          <SelectItem value="reverse">↩️ Реверс</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="shift" className="text-primary">Сдвиг (ключ): {shift}</Label>
-                      <Input
-                        id="shift"
-                        type="range"
-                        min="1"
-                        max="25"
-                        value={shift}
-                        onChange={(e) => setShift(Number(e.target.value))}
-                        className="cursor-pointer"
-                      />
-                    </div>
+                    {algorithm === 'caesar' && (
+                      <div className="space-y-2">
+                        <Label htmlFor="shift" className="text-primary">Сдвиг (ключ): {shift}</Label>
+                        <Input
+                          id="shift"
+                          type="range"
+                          min="1"
+                          max="25"
+                          value={shift}
+                          onChange={(e) => setShift(Number(e.target.value))}
+                          className="cursor-pointer"
+                        />
+                      </div>
+                    )}
+
+                    {algorithm === 'vigenere' && (
+                      <div className="space-y-2">
+                        <Label htmlFor="keyword" className="text-primary">Ключевое слово</Label>
+                        <Input
+                          id="keyword"
+                          placeholder="Введите ключевое слово..."
+                          value={keyword}
+                          onChange={(e) => setKeyword(e.target.value)}
+                          className="cyber-border bg-muted/50 font-mono"
+                        />
+                        <p className="text-xs text-muted-foreground">Используются только буквы, остальное игнорируется</p>
+                      </div>
+                    )}
+
+                    {(algorithm === 'atbash' || algorithm === 'rot13' || algorithm === 'reverse') && (
+                      <div className="p-4 bg-primary/10 border border-primary/30 rounded-lg">
+                        <p className="text-sm text-muted-foreground flex items-center gap-2">
+                          <Icon name="Info" className="w-4 h-4 text-primary" />
+                          {algorithm === 'atbash' && 'Атбаш заменяет буквы зеркально: А↔Я, Б↔Ю и т.д.'}
+                          {algorithm === 'rot13' && 'ROT13 — частный случай шифра Цезаря со сдвигом 13'}
+                          {algorithm === 'reverse' && 'Реверс переворачивает текст задом наперёд'}
+                        </p>
+                      </div>
+                    )}
 
                     <div className="space-y-2">
                       <Label htmlFor="input" className="text-primary">Исходный текст</Label>
@@ -408,7 +528,15 @@ const Index = () => {
                       <div className="p-4 bg-primary/10 border border-primary/30 rounded-lg animate-fade-in">
                         <p className="text-sm text-muted-foreground flex items-center gap-2">
                           <Icon name="Info" className="w-4 h-4 text-primary" />
-                          Используется алгоритм <strong className="text-primary">Шифр Цезаря</strong> со сдвигом <strong className="text-primary">{shift}</strong>
+                          Используется алгоритм <strong className="text-primary">
+                            {algorithm === 'caesar' && 'Шифр Цезаря'}
+                            {algorithm === 'vigenere' && 'Шифр Виженера'}
+                            {algorithm === 'atbash' && 'Атбаш'}
+                            {algorithm === 'rot13' && 'ROT13'}
+                            {algorithm === 'reverse' && 'Реверс'}
+                          </strong>
+                          {algorithm === 'caesar' && <> со сдвигом <strong className="text-primary">{shift}</strong></>}
+                          {algorithm === 'vigenere' && <> с ключом <strong className="text-primary">{keyword}</strong></>}
                         </p>
                       </div>
                     )}
