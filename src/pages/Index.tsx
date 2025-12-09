@@ -1,216 +1,29 @@
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
+import { lazy, Suspense } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Icon from '@/components/ui/icon';
 import { Badge } from '@/components/ui/badge';
+import MatrixRain from '@/components/MatrixRain';
+
+const TheorySection = lazy(() => import('@/components/TheorySection'));
+const AlgorithmsSection = lazy(() => import('@/components/AlgorithmsSection'));
+const PracticeSection = lazy(() => import('@/components/PracticeSection'));
+
+const LoadingCard = () => (
+  <Card className="cyber-border bg-card/50 backdrop-blur-sm">
+    <CardContent className="p-12 text-center">
+      <div className="animate-pulse text-primary">Загрузка...</div>
+    </CardContent>
+  </Card>
+);
 
 const Index = () => {
-  const [inputText, setInputText] = useState('');
-  const [shift, setShift] = useState(3);
-  const [encryptedText, setEncryptedText] = useState('');
-  const [algorithm, setAlgorithm] = useState('caesar');
-  const [keyword, setKeyword] = useState('КЛЮЧ');
-
-  const caesarCipher = (text: string, shift: number, encrypt: boolean = true) => {
-    const s = encrypt ? shift : -shift;
-    return text
-      .split('')
-      .map(char => {
-        if (char.match(/[а-яё]/i)) {
-          const code = char.charCodeAt(0);
-          const isUpperCase = char === char.toUpperCase();
-          const base = isUpperCase ? 1040 : 1072;
-          const alphabetSize = char.toLowerCase() === 'ё' ? 33 : 32;
-          const newCode = ((code - base + s) % alphabetSize + alphabetSize) % alphabetSize + base;
-          return String.fromCharCode(newCode);
-        } else if (char.match(/[a-z]/i)) {
-          const code = char.charCodeAt(0);
-          const isUpperCase = char === char.toUpperCase();
-          const base = isUpperCase ? 65 : 97;
-          const newCode = ((code - base + s) % 26 + 26) % 26 + base;
-          return String.fromCharCode(newCode);
-        }
-        return char;
-      })
-      .join('');
-  };
-
-  const vigenereCipher = (text: string, keyword: string, encrypt: boolean = true) => {
-    if (!keyword) return text;
-    const key = keyword.toUpperCase().replace(/[^A-ZА-ЯЁ]/g, '');
-    if (!key) return text;
-    
-    let keyIndex = 0;
-    return text
-      .split('')
-      .map(char => {
-        if (char.match(/[а-яё]/i)) {
-          const keyChar = key[keyIndex % key.length];
-          const keyShift = keyChar.match(/[А-ЯЁ]/) 
-            ? keyChar.charCodeAt(0) - 1040 
-            : keyChar.charCodeAt(0) - 65;
-          keyIndex++;
-          return caesarCipher(char, encrypt ? keyShift : -keyShift, true);
-        } else if (char.match(/[a-z]/i)) {
-          const keyChar = key[keyIndex % key.length];
-          const keyShift = keyChar.match(/[А-ЯЁ]/) 
-            ? keyChar.charCodeAt(0) - 1040 
-            : keyChar.charCodeAt(0) - 65;
-          keyIndex++;
-          return caesarCipher(char, encrypt ? keyShift : -keyShift, true);
-        }
-        return char;
-      })
-      .join('');
-  };
-
-  const atbashCipher = (text: string) => {
-    return text
-      .split('')
-      .map(char => {
-        if (char.match(/[а-яё]/i)) {
-          const code = char.charCodeAt(0);
-          const isUpperCase = char === char.toUpperCase();
-          const base = isUpperCase ? 1040 : 1072;
-          const alphabetSize = 32;
-          const newCode = base + (alphabetSize - 1 - (code - base));
-          return String.fromCharCode(newCode);
-        } else if (char.match(/[a-z]/i)) {
-          const code = char.charCodeAt(0);
-          const isUpperCase = char === char.toUpperCase();
-          const base = isUpperCase ? 65 : 97;
-          const newCode = base + (25 - (code - base));
-          return String.fromCharCode(newCode);
-        }
-        return char;
-      })
-      .join('');
-  };
-
-  const rot13Cipher = (text: string) => {
-    return caesarCipher(text, 13, true);
-  };
-
-  const reverseCipher = (text: string) => {
-    return text.split('').reverse().join('');
-  };
-
-  const morseCipher = (text: string, encrypt: boolean = true) => {
-    const morseCode: { [key: string]: string } = {
-      'А': '.-', 'Б': '-...', 'В': '.--', 'Г': '--.', 'Д': '-..',
-      'Е': '.', 'Ё': '.', 'Ж': '...-', 'З': '--..', 'И': '..',
-      'Й': '.---', 'К': '-.-', 'Л': '.-..', 'М': '--', 'Н': '-.',
-      'О': '---', 'П': '.--.', 'Р': '.-.', 'С': '...', 'Т': '-',
-      'У': '..-', 'Ф': '..-.', 'Х': '....', 'Ц': '-.-.', 'Ч': '---.',
-      'Ш': '----', 'Щ': '--.-', 'Ъ': '--.--', 'Ы': '-.--', 'Ь': '-..-',
-      'Э': '..-..', 'Ю': '..--', 'Я': '.-.-',
-      'A': '.-', 'B': '-...', 'C': '-.-.', 'D': '-..', 'E': '.',
-      'F': '..-.', 'G': '--.', 'H': '....', 'I': '..', 'J': '.---',
-      'K': '-.-', 'L': '.-..', 'M': '--', 'N': '-.', 'O': '---',
-      'P': '.--.', 'Q': '--.-', 'R': '.-.', 'S': '...', 'T': '-',
-      'U': '..-', 'V': '...-', 'W': '.--', 'X': '-..-', 'Y': '-.--',
-      'Z': '--..', '0': '-----', '1': '.----', '2': '..---',
-      '3': '...--', '4': '....-', '5': '.....', '6': '-....',
-      '7': '--...', '8': '---..', '9': '----.',
-      '.': '.-.-.-', ',': '--..--', '?': '..--..', '!': '-.-.--',
-      ' ': '/'
-    };
-
-    if (encrypt) {
-      return text
-        .toUpperCase()
-        .split('')
-        .map(char => morseCode[char] || char)
-        .join(' ')
-        .replace(/\s+/g, ' ')
-        .trim();
-    } else {
-      const reverseMorse: { [key: string]: string } = {};
-      Object.keys(morseCode).forEach(key => {
-        reverseMorse[morseCode[key]] = key;
-      });
-
-      return text
-        .split(' ')
-        .map(code => reverseMorse[code] || code)
-        .join('')
-        .replace(/\//g, ' ');
-    }
-  };
-
-  const handleEncrypt = () => {
-    switch (algorithm) {
-      case 'caesar':
-        setEncryptedText(caesarCipher(inputText, shift, true));
-        break;
-      case 'vigenere':
-        setEncryptedText(vigenereCipher(inputText, keyword, true));
-        break;
-      case 'atbash':
-        setEncryptedText(atbashCipher(inputText));
-        break;
-      case 'rot13':
-        setEncryptedText(rot13Cipher(inputText));
-        break;
-      case 'reverse':
-        setEncryptedText(reverseCipher(inputText));
-        break;
-      case 'morse':
-        setEncryptedText(morseCipher(inputText, true));
-        break;
-    }
-  };
-
-  const handleDecrypt = () => {
-    switch (algorithm) {
-      case 'caesar':
-        setEncryptedText(caesarCipher(inputText, shift, false));
-        break;
-      case 'vigenere':
-        setEncryptedText(vigenereCipher(inputText, keyword, false));
-        break;
-      case 'atbash':
-        setEncryptedText(atbashCipher(inputText));
-        break;
-      case 'rot13':
-        setEncryptedText(rot13Cipher(inputText));
-        break;
-      case 'reverse':
-        setEncryptedText(reverseCipher(inputText));
-        break;
-      case 'morse':
-        setEncryptedText(morseCipher(inputText, false));
-        break;
-    }
-  };
-
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
-      <div className="absolute inset-0 opacity-10 pointer-events-none">
-        {[...Array(20)].map((_, i) => (
-          <div
-            key={i}
-            className="absolute text-primary font-mono text-xs"
-            style={{
-              left: `${Math.random() * 100}%`,
-              animation: `matrixRain ${5 + Math.random() * 10}s linear infinite`,
-              animationDelay: `${Math.random() * 5}s`,
-            }}
-          >
-            {Array.from({ length: 20 }, () => 
-              Math.random() > 0.5 ? String.fromCharCode(48 + Math.floor(Math.random() * 10)) : String.fromCharCode(65 + Math.floor(Math.random() * 26))
-            ).join('\n')}
-          </div>
-        ))}
-      </div>
+      <MatrixRain />
 
       <div className="relative z-10">
-        <header className="border-b border-primary/20 backdrop-blur-sm bg-background/50">
+        <header className="border-b border-primary/20 backdrop-blur-sm bg-background/50 sticky top-0 z-50">
           <div className="container mx-auto px-4 py-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -226,7 +39,7 @@ const Index = () => {
 
         <main className="container mx-auto px-4 py-12">
           <Tabs defaultValue="home" className="space-y-8">
-            <TabsList className="grid w-full grid-cols-5 bg-card/50 backdrop-blur-sm border border-primary/20">
+            <TabsList className="grid w-full grid-cols-5 bg-card/50 backdrop-blur-sm border border-primary/20 sticky top-24 z-40">
               <TabsTrigger value="home" className="data-[state=active]:matrix-text data-[state=active]:neon-glow">
                 <Icon name="Home" className="w-4 h-4 mr-2" />
                 Главная
@@ -309,292 +122,21 @@ const Index = () => {
             </TabsContent>
 
             <TabsContent value="theory" className="space-y-6">
-              <Card className="cyber-border bg-card/50 backdrop-blur-sm">
-                <CardHeader>
-                  <CardTitle className="text-3xl matrix-text flex items-center gap-3">
-                    <Icon name="BookOpen" className="w-8 h-8" />
-                    Теория криптографии
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="space-y-4">
-                    <div className="p-4 bg-muted/50 rounded-lg border border-primary/20">
-                      <h3 className="text-xl font-semibold text-secondary mb-2 flex items-center gap-2">
-                        <Icon name="Info" className="w-5 h-5" />
-                        Что такое криптография?
-                      </h3>
-                      <p className="text-foreground/90">
-                        Криптография — наука о методах обеспечения конфиденциальности и аутентичности информации. 
-                        Она используется для защиты данных от несанкционированного доступа путём преобразования 
-                        исходного текста в зашифрованный вид.
-                      </p>
-                    </div>
-
-                    <div className="p-4 bg-muted/50 rounded-lg border border-primary/20">
-                      <h3 className="text-xl font-semibold text-secondary mb-2 flex items-center gap-2">
-                        <Icon name="History" className="w-5 h-5" />
-                        История развития
-                      </h3>
-                      <ul className="space-y-2 text-foreground/90">
-                        <li className="flex items-start gap-2">
-                          <span className="text-primary font-bold mt-1">►</span>
-                          <span><strong>Античность:</strong> Шифр Цезаря использовался для военной переписки</span>
-                        </li>
-                        <li className="flex items-start gap-2">
-                          <span className="text-primary font-bold mt-1">►</span>
-                          <span><strong>XVI век:</strong> Изобретение шифра Виженера - полиалфавитного метода</span>
-                        </li>
-                        <li className="flex items-start gap-2">
-                          <span className="text-primary font-bold mt-1">►</span>
-                          <span><strong>XX век:</strong> Появление машин Enigma и разработка компьютерной криптографии</span>
-                        </li>
-                        <li className="flex items-start gap-2">
-                          <span className="text-primary font-bold mt-1">►</span>
-                          <span><strong>1970-е:</strong> Создание RSA - первой системы с открытым ключом</span>
-                        </li>
-                      </ul>
-                    </div>
-
-                    <div className="p-4 bg-muted/50 rounded-lg border border-primary/20">
-                      <h3 className="text-xl font-semibold text-secondary mb-2 flex items-center gap-2">
-                        <Icon name="Key" className="w-5 h-5" />
-                        Основные термины
-                      </h3>
-                      <div className="grid md:grid-cols-2 gap-4 mt-4">
-                        <div className="p-3 bg-background/50 rounded border border-primary/10">
-                          <p className="font-semibold text-primary">Шифрование</p>
-                          <p className="text-sm text-muted-foreground">Преобразование исходного текста в зашифрованный</p>
-                        </div>
-                        <div className="p-3 bg-background/50 rounded border border-primary/10">
-                          <p className="font-semibold text-primary">Дешифрование</p>
-                          <p className="text-sm text-muted-foreground">Обратное преобразование для получения исходного текста</p>
-                        </div>
-                        <div className="p-3 bg-background/50 rounded border border-primary/10">
-                          <p className="font-semibold text-primary">Ключ</p>
-                          <p className="text-sm text-muted-foreground">Секретная информация для шифрования/дешифрования</p>
-                        </div>
-                        <div className="p-3 bg-background/50 rounded border border-primary/10">
-                          <p className="font-semibold text-primary">Криптоанализ</p>
-                          <p className="text-sm text-muted-foreground">Наука о взломе шифров</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              <Suspense fallback={<LoadingCard />}>
+                <TheorySection />
+              </Suspense>
             </TabsContent>
 
             <TabsContent value="algorithms" className="space-y-6">
-              <Card className="cyber-border bg-card/50 backdrop-blur-sm">
-                <CardHeader>
-                  <CardTitle className="text-3xl matrix-text flex items-center gap-3">
-                    <Icon name="Binary" className="w-8 h-8" />
-                    Алгоритмы шифрования
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <Card className="bg-muted/50 border-secondary/40">
-                    <CardHeader>
-                      <CardTitle className="text-secondary flex items-center gap-2">
-                        <Icon name="RotateCw" className="w-6 h-6" />
-                        Шифр Цезаря (Caesar Cipher)
-                      </CardTitle>
-                      <Badge variant="outline" className="w-fit">Классический</Badge>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      <p className="text-foreground/90">
-                        Один из древнейших методов шифрования, основанный на сдвиге букв алфавита на фиксированное число позиций.
-                      </p>
-                      <div className="p-3 bg-background/70 rounded font-mono text-sm border border-primary/20">
-                        <p className="text-muted-foreground">Пример: сдвиг на 3</p>
-                        <p className="text-primary">Исходный: ПРИВЕТ</p>
-                        <p className="text-secondary">Зашифрованный: ТУЛДЗХ</p>
-                      </div>
-                      <p className="text-sm text-muted-foreground">
-                        <strong>Применение:</strong> Обучение основам криптографии, простые головоломки
-                      </p>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="bg-muted/50 border-accent/40">
-                    <CardHeader>
-                      <CardTitle className="text-accent flex items-center gap-2">
-                        <Icon name="Grid3x3" className="w-6 h-6" />
-                        Шифр Виженера (Vigenère Cipher)
-                      </CardTitle>
-                      <Badge variant="outline" className="w-fit">Полиалфавитный</Badge>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      <p className="text-foreground/90">
-                        Усовершенствованный метод, использующий ключевое слово для различных сдвигов на каждой позиции.
-                      </p>
-                      <div className="p-3 bg-background/70 rounded font-mono text-sm border border-primary/20">
-                        <p className="text-muted-foreground">Ключ: КЛЮЧ</p>
-                        <p className="text-primary">Исходный: СЕКРЕТ</p>
-                        <p className="text-accent">Зашифрованный: ЪММЦЖХ</p>
-                      </div>
-                      <p className="text-sm text-muted-foreground">
-                        <strong>Применение:</strong> Военная переписка в прошлом, образовательные цели
-                      </p>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="bg-muted/50 border-primary/40">
-                    <CardHeader>
-                      <CardTitle className="text-primary flex items-center gap-2">
-                        <Icon name="KeyRound" className="w-6 h-6" />
-                        RSA (Rivest–Shamir–Adleman)
-                      </CardTitle>
-                      <Badge variant="outline" className="w-fit">Асимметричный</Badge>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      <p className="text-foreground/90">
-                        Современный алгоритм с открытым ключом, основанный на сложности факторизации больших чисел.
-                      </p>
-                      <div className="p-3 bg-background/70 rounded font-mono text-sm border border-primary/20">
-                        <p className="text-muted-foreground">Два ключа:</p>
-                        <p className="text-primary">Открытый: для шифрования</p>
-                        <p className="text-secondary">Закрытый: для дешифрования</p>
-                      </div>
-                      <p className="text-sm text-muted-foreground">
-                        <strong>Применение:</strong> HTTPS, цифровые подписи, защищенная передача данных
-                      </p>
-                    </CardContent>
-                  </Card>
-                </CardContent>
-              </Card>
+              <Suspense fallback={<LoadingCard />}>
+                <AlgorithmsSection />
+              </Suspense>
             </TabsContent>
 
             <TabsContent value="practice" className="space-y-6">
-              <Card className="cyber-border bg-card/50 backdrop-blur-sm pulse-glow">
-                <CardHeader>
-                  <CardTitle className="text-3xl matrix-text flex items-center gap-3">
-                    <Icon name="Terminal" className="w-8 h-8" />
-                    Интерактивный калькулятор
-                  </CardTitle>
-                  <CardDescription>Шифруйте и дешифруйте текст в реальном времени</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="algorithm" className="text-primary">Алгоритм шифрования</Label>
-                      <Select value={algorithm} onValueChange={setAlgorithm}>
-                        <SelectTrigger id="algorithm" className="cyber-border bg-muted/50">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="bg-card border-primary/20">
-                          <SelectItem value="caesar">🔄 Шифр Цезаря</SelectItem>
-                          <SelectItem value="vigenere">🔑 Шифр Виженера</SelectItem>
-                          <SelectItem value="atbash">🔃 Атбаш</SelectItem>
-                          <SelectItem value="rot13">⚡ ROT13</SelectItem>
-                          <SelectItem value="morse">📡 Азбука Морзе</SelectItem>
-                          <SelectItem value="reverse">↩️ Реверс</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {algorithm === 'caesar' && (
-                      <div className="space-y-2">
-                        <Label htmlFor="shift" className="text-primary">Сдвиг (ключ): {shift}</Label>
-                        <Input
-                          id="shift"
-                          type="range"
-                          min="1"
-                          max="25"
-                          value={shift}
-                          onChange={(e) => setShift(Number(e.target.value))}
-                          className="cursor-pointer"
-                        />
-                      </div>
-                    )}
-
-                    {algorithm === 'vigenere' && (
-                      <div className="space-y-2">
-                        <Label htmlFor="keyword" className="text-primary">Ключевое слово</Label>
-                        <Input
-                          id="keyword"
-                          placeholder="Введите ключевое слово..."
-                          value={keyword}
-                          onChange={(e) => setKeyword(e.target.value)}
-                          className="cyber-border bg-muted/50 font-mono"
-                        />
-                        <p className="text-xs text-muted-foreground">Используются только буквы, остальное игнорируется</p>
-                      </div>
-                    )}
-
-                    {(algorithm === 'atbash' || algorithm === 'rot13' || algorithm === 'reverse' || algorithm === 'morse') && (
-                      <div className="p-4 bg-primary/10 border border-primary/30 rounded-lg">
-                        <p className="text-sm text-muted-foreground flex items-center gap-2">
-                          <Icon name="Info" className="w-4 h-4 text-primary" />
-                          {algorithm === 'atbash' && 'Атбаш заменяет буквы зеркально: А↔Я, Б↔Ю и т.д.'}
-                          {algorithm === 'rot13' && 'ROT13 — частный случай шифра Цезаря со сдвигом 13'}
-                          {algorithm === 'reverse' && 'Реверс переворачивает текст задом наперёд'}
-                          {algorithm === 'morse' && 'Азбука Морзе: точки (.) и тире (-). Пробелы между символами, "/" разделяет слова'}
-                        </p>
-                      </div>
-                    )}
-
-                    <div className="space-y-2">
-                      <Label htmlFor="input" className="text-primary">Исходный текст</Label>
-                      <Textarea
-                        id="input"
-                        placeholder="Введите текст для шифрования..."
-                        value={inputText}
-                        onChange={(e) => setInputText(e.target.value)}
-                        className="cyber-border bg-muted/50 font-mono min-h-[120px]"
-                      />
-                    </div>
-
-                    <div className="flex gap-3">
-                      <Button 
-                        onClick={handleEncrypt} 
-                        className="flex-1 bg-secondary hover:bg-secondary/80 neon-glow"
-                        disabled={!inputText}
-                      >
-                        <Icon name="Lock" className="w-4 h-4 mr-2" />
-                        Зашифровать
-                      </Button>
-                      <Button 
-                        onClick={handleDecrypt} 
-                        className="flex-1 bg-accent hover:bg-accent/80"
-                        disabled={!inputText}
-                      >
-                        <Icon name="Unlock" className="w-4 h-4 mr-2" />
-                        Дешифровать
-                      </Button>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="output" className="text-primary">Результат</Label>
-                      <Textarea
-                        id="output"
-                        value={encryptedText}
-                        readOnly
-                        className="cyber-border bg-background/70 font-mono min-h-[120px] matrix-text"
-                        placeholder="Результат появится здесь..."
-                      />
-                    </div>
-
-                    {encryptedText && (
-                      <div className="p-4 bg-primary/10 border border-primary/30 rounded-lg animate-fade-in">
-                        <p className="text-sm text-muted-foreground flex items-center gap-2">
-                          <Icon name="Info" className="w-4 h-4 text-primary" />
-                          Используется алгоритм <strong className="text-primary">
-                            {algorithm === 'caesar' && 'Шифр Цезаря'}
-                            {algorithm === 'vigenere' && 'Шифр Виженера'}
-                            {algorithm === 'atbash' && 'Атбаш'}
-                            {algorithm === 'rot13' && 'ROT13'}
-                            {algorithm === 'morse' && 'Азбука Морзе'}
-                            {algorithm === 'reverse' && 'Реверс'}
-                          </strong>
-                          {algorithm === 'caesar' && <> со сдвигом <strong className="text-primary">{shift}</strong></>}
-                          {algorithm === 'vigenere' && <> с ключом <strong className="text-primary">{keyword}</strong></>}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
+              <Suspense fallback={<LoadingCard />}>
+                <PracticeSection />
+              </Suspense>
             </TabsContent>
 
             <TabsContent value="examples" className="space-y-6">
